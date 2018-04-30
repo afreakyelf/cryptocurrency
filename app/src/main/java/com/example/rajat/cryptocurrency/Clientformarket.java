@@ -23,7 +23,7 @@ public class Clientformarket {
 
         if (retrofit==null){
             retrofit  = new Retrofit.Builder()
-                    .baseUrl("https://min-api.cryptocompare.com/")
+                    .baseUrl("https://newsapi.org/v2/")
                     .client(httpClient)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();

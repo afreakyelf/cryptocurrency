@@ -10,6 +10,6 @@ import retrofit2.http.GET;
 
 public interface ApiInterfaceformarket {
 
-    @GET("data/pricemultifull?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,NEO,XLM,EOS,XMR,DASH,XEM,MIOTA,UDST,TRX,VEN,ETC,LSK,XRB,QTUM,OMG,BTG,BNB,ICX,ZEC&tsyms=USD")
+    @GET("top-headlines?sources=google-news-in&apiKey=24e5d521314646b38aca31ab13a74ff5")
     Call<ResponseBody> getJSON();
 }

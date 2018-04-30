@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/nobookmarks"
         android:textColor="#452727"
-        android:text="Well! You haven't saved anything yet."
+        android:text="No Bookmarks Added Yet!"
         android:textSize="@dimen/_25sdp"
         android:gravity="center"
        android:layout_below="@+id/toolbar"

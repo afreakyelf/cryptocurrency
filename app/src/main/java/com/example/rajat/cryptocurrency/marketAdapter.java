@@ -1,15 +1,27 @@
 package com.example.rajat.cryptocurrency;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.firebase.client.Firebase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -18,144 +30,291 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
-/**
- * Created by chivu on 23/3/18.
- */
 
-public class marketAdapter extends RecyclerView.Adapter<marketAdapter.ViewHolder> {
+public class marketAdapter extends RecyclerView.Adapter<marketAdapter.ViewHolder>{
 
-    private ArrayList<HashMap<String, Object>> al_details;
+    ArrayList<HashMap<String, Object>> al_details;
     market fragment;
     Context mContext;
+
+    public static boolean boolean_id;
+    boolean setnews = false;
+
+    ImageView iv_image;
+    TextView tv_title;
+
+    String URLTOIMAGE="urlToImage";
+    String DESCRIPTION="description";
+    String AUTHOR="author";
+    String TITLE="title";
+    String URL_WEB="url";
+    String PUBLISHEDAT="publishedAt";
+
+    Snackbar snackbar;
+
+    DatabaseReference mDatabaseReference;
+    StorageReference mStorageReference;
+    ProgressDialog mProgressDialog;
+    private Firebase mRoofRef;
+    public Uri mImgUri= null;
     FirebaseAuth mAuth;
-    String sprice,shigh,slow,names;
-    int hour,min,sec,ms,dd,m,y;
-    private ArrayList al_details2;
-    static String a,b,ca,d,e,f,g;
 
-    marketAdapter(ArrayList<HashMap<String, Object>> al_details, market news, Context context) {
+    public String  atv, des;
+    public static String time;
+    FirebaseAuth firebaseauth;
+    String userid , timea;
+
+
+
+
+    public marketAdapter(ArrayList<HashMap<String,Object>> al_details, market fragment, Context context) {
+
         this.al_details = al_details;
-        this.fragment = news;
-        this.mContext  = context;
-
+        this.fragment=fragment;
+        this.mContext=context;
     }
 
-    @NonNull
+
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.market, viewGroup, false);
-        return new ViewHolder(view);
+    public marketAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.market, parent, false);
+        ViewHolder viewHolder1 = new ViewHolder(view);
+
+        return viewHolder1;
     }
 
 
 
-    class ViewHolder extends RecyclerView.ViewHolder{
-        private TextView name,price,high,low;
-        private ImageView add;
+    public void callback(HashMap<String, Object> tmpMap, String dataType, int mode) {
+
+    }
 
 
-        ViewHolder(View view) {
-            super(view);
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
-            name =view.findViewById(R.id.name);
-            price =view.findViewById(R.id.price);
-            high = view.findViewById(R.id.high);
-            low = view.findViewById(R.id.low);
-            add  = view.findViewById(R.id.add);
+        public ImageView iv_image ;
+        public ImageView share ,bookmark;
+        TextView tv_title;
+        RelativeLayout rl_click;
+        Button button;
+
+
+
+        public ViewHolder(View v) {
+
+            super(v);
+
+            iv_image = v.findViewById(R.id.imageview);
+            tv_title = v.findViewById(R.id.tv1);
+            rl_click = v.findViewById(R.id.relmarket);
+            share = v.findViewById(R.id.share);
+            bookmark = v.findViewById(R.id.bookmark);
+
+            // readmore = (TextView) v.findViewById(R.id.readmore);
+
+            share.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent shareintent = new Intent(Intent.ACTION_SEND);
+                    shareintent.setType("text/plain");
+                    shareintent.putExtra(Intent.EXTRA_TEXT,al_details.get(getLayoutPosition()).get("url").toString());
+                    mContext.startActivity(Intent.createChooser(shareintent,"Share Via"));
+                }
+            });
+
         }
 
 
-
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull final ViewHolder viewHolder, final int i) {
-
-        viewHolder.name.setText(al_details.get(i).get("FROMSYMBOL").toString());
-        viewHolder.price.setText(al_details.get(i).get("PRICE").toString());
-        viewHolder.high.setText(al_details.get(i).get("HIGH").toString());
-        viewHolder.low.setText(al_details.get(i).get("LOW").toString());
-
-        final Calendar c = Calendar.getInstance();
-        hour = c.get(Calendar.HOUR_OF_DAY);
-        min = c.get(Calendar.MINUTE);
-        sec = c.get(Calendar.SECOND);
-        ms = c.get(Calendar.MILLISECOND);
-        dd = c.get(Calendar.DATE);
-        m = c.get(Calendar.MONTH);
-        y = c.get(Calendar.YEAR);
-
-        a = String.valueOf(hour);
-        b = String.valueOf(min);
-        ca = String.valueOf(sec);
-        d = String.valueOf(ms);
-        e= String.valueOf(dd);
-        f = String.valueOf(m);
-        g = String.valueOf(y);
-
-
-
-        viewHolder.add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(mContext, "Saving...", Toast.LENGTH_SHORT).show();
+        public void fn_savedstate(final String timea) {
             mAuth = FirebaseAuth.getInstance();
             final FirebaseUser user = mAuth.getCurrentUser();
 
-            if (user!=null){
-                sprice = al_details.get(i).get("PRICE").toString();
-                slow = al_details.get(i).get("LOW").toString();
-                shigh = al_details.get(i).get("HIGH").toString();
-                names = al_details.get(i).get("NAME").toString();
-
-
-                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-                final String userid = mAuth.getCurrentUser().getUid();
-
-                final Firebase mref = new Firebase("https://rajat-b182e.firebaseio.com/").child("Crypto_User_Details").child(userid).child(a+b+ca+d);
-                databaseReference.orderByValue().addListenerForSingleValueEvent(new ValueEventListener() {
+            if(user!=null) {
+                userid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+                mDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-
-                         Firebase child_name = mref.child("PRICE");
-                        child_name.setValue(sprice);
-                        child_name = mref.child("HIGHDAY");
-                        child_name.setValue(shigh);
-                        child_name = mref.child("LOWDAY");
-                        child_name.setValue(slow);
-                        child_name = mref.child("TIME");
-                        child_name.setValue(a+':'+b+':'+ca+ " Hr.");
-                        child_name = mref.child("NAME");
-                        child_name.setValue(names);
-                        child_name = mref.child("DATE");
-                        child_name.setValue(e+'/'+f+'/'+g);
-
-                        Toast.makeText(mContext, "Saved!", Toast.LENGTH_SHORT).show();
-
+                        if(dataSnapshot.child("News_User_Details").child(userid).hasChild(timea+userid)){
+                            bookmark.setImageResource(R.drawable.bookmarkedstar);
+                        }else {
+                            bookmark.setImageResource(R.drawable.bookmarkstar);
+                        }
                     }
-
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
 
                     }
                 });
+            }else {
+
 
             }
 
+
+
+        }
+    }
+
+
+    @Override
+    public void onBindViewHolder(final ViewHolder vholder, final int position) {
+
+
+
+        try {
+            Glide.with(mContext).load(al_details.get(position).get(URLTOIMAGE))
+                    .thumbnail( Glide.with(mContext).load(R.drawable.loading_icon))
+                    .skipMemoryCache(false)
+                    .dontAnimate()
+                    .listener(new RequestListener<Object, GlideDrawable>() {
+                        @Override
+                        public boolean onException(Exception e, Object model, Target<GlideDrawable> target, boolean isFirstResource) {
+                            Log.d("headline glide issue ","issue on position"+al_details.get(position).get("title"));
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(GlideDrawable resource, Object model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                            Log.d("headline glide success","Success on position"+al_details.get(position).get("title"));
+                            vholder.iv_image.setImageDrawable(resource);
+                            return false;
+                        }
+                    })
+                    .into(vholder.iv_image);
+
+            Log.d("headline link" + position, (String) al_details.get(position).get(URLTOIMAGE));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+
+        vholder.tv_title.setText(al_details.get(position).get("title").toString());
+
+
+
+        //    boolean_id = false;
+        timea= al_details.get(position).get("publishedAt").toString();
+        timea = timea.replace(".", ":");
+        Log.d("time",timea);
+        vholder.fn_savedstate(timea);
+
+
+
+
+        vholder.bookmark.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+
+                setnews = true;
+
+                mAuth = FirebaseAuth.getInstance();
+                final FirebaseUser user = mAuth.getCurrentUser();
+
+
+
+                if (user != null) {
+
+                    atv = al_details.get(position).get("title").toString();
+                    des = al_details.get(position).get("description").toString();
+                    time = al_details.get(position).get("publishedAt").toString();
+                    time = time.replace(".", ":");
+
+                    mImgUri = Uri.parse(al_details.get(position).get("urlToImage").toString());
+
+
+
+
+                    mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+                    FirebaseAuth firebaseauth = FirebaseAuth.getInstance();
+                    final String userid = firebaseauth.getCurrentUser().getUid();
+
+
+                    mRoofRef = new Firebase("https://rajat-608ab.firebaseio.com/").child("News_User_Details").child(userid).child(time + userid);
+                //    mStorageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://newsly-e074e.appspot.com");
+
+                    mDatabaseReference.orderByValue().addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+
+                            if (setnews) {
+                                if (dataSnapshot.child("News_User_Details").child(userid).hasChild(time + userid)) {
+                                    mDatabaseReference.child("News_User_Details").child(userid).child(time + userid).removeValue();
+                                    vholder.bookmark.setImageResource(R.drawable.bookmarkstar);
+                                    Snackbar.make(vholder.rl_click,"Bookmark removed",Snackbar.LENGTH_SHORT).setActionTextColor(Color.YELLOW).show();
+                                    setnews = false;
+
+                                }
+                                else {
+                                    vholder.bookmark.setImageResource(R.drawable.bookmarkedstar);
+                                    final String id = mRoofRef.getKey();
+                                    Log.e("Bookmark ID", id);
+                                    final Firebase childRef_name = mRoofRef.child("Image_Title");
+                                    childRef_name.setValue(atv);
+                                    Firebase childdes = mRoofRef.child("Image_des");
+                                    childdes.setValue(des);
+                                    mRoofRef.child("Image_URL").setValue(mImgUri.toString());
+                                    Snackbar.make(vholder.rl_click,"Bookmarked",Snackbar.LENGTH_SHORT).show();
+
+                                }
+                            }
+
+
+
+
+                        }
+
+                        //end of datachange
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
+
+
+
+
+                }
+
+
+
+                else {
+                    Toast.makeText(mContext, "Please login First", Toast.LENGTH_SHORT).show();
+
+                }
+
             }
+
+
         });
+
+
+
 
     }
 
+    private void abc(final String time) {
+
+    }
+
+
     @Override
     public int getItemCount() {
+
         return al_details.size();
     }
 
 
+
 }
+

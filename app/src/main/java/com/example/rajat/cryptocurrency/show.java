@@ -31,11 +31,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.tuyenmonkey.mkloader.model.Circle;
 
-import static com.example.rajat.cryptocurrency.marketAdapter.a;
-import static com.example.rajat.cryptocurrency.marketAdapter.b;
-import static com.example.rajat.cryptocurrency.marketAdapter.ca;
-import static com.example.rajat.cryptocurrency.marketAdapter.d;
+
 
 
 public class show extends AppCompatActivity {
@@ -44,12 +42,13 @@ public class show extends AppCompatActivity {
     FirebaseDatabase firebaseDatabase;
     DatabaseReference myRef;
     FirebaseAuth firebaseauth;
-   public static FirebaseRecyclerAdapter<show_items, ShowDataViewHolder> mFirebaseAdapter;
+    public static FirebaseRecyclerAdapter<show_items, ShowDataViewHolder> mFirebaseAdapter;
     private ProgressDialog progressDialog;
     ImageView nointernet = null;
     TextView nobookmarks;
-    public static String bookmark_id;
     ProgressBar progressBar;
+    public static String bookmark_id;
+
     public show() {
         // Required empty public constructor
     }
@@ -61,25 +60,29 @@ public class show extends AppCompatActivity {
         setContentView(R.layout.rvforbookmarks);
         Firebase.setAndroidContext(this);
 
-        nointernet =  findViewById(R.id.nointernet);
-       nobookmarks =  findViewById(R.id.nobookmarks);
-      nobookmarks.setVisibility(View.GONE);
+        nointernet = (ImageView) findViewById(R.id.nointernet);
+        nobookmarks = (TextView) findViewById(R.id.nobookmarks);
+        nobookmarks.setVisibility(View.GONE);
 
 
-         progressBar =  findViewById(R.id.progress);
-       progressBar.setProgress(0);
+
+
+        progressBar =  findViewById(R.id.progress);
+        progressBar.setProgress(0);
         progressBar.setVisibility(View.VISIBLE);
 
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
+     /*   Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("Bookmarks");
+*/
+
 
         firebaseDatabase = FirebaseDatabase.getInstance();
 
         firebaseauth = FirebaseAuth.getInstance();
         final String userid =firebaseauth.getCurrentUser().getUid();
-        myRef = FirebaseDatabase.getInstance().getReference("Crypto_User_Details").child(userid);
-        recyclerView = findViewById(R.id.rv);
+        myRef = FirebaseDatabase.getInstance().getReference("News_User_Details").child(userid);
+        recyclerView = (RecyclerView)findViewById(R.id.rv);
         LinearLayoutManager ll  = new LinearLayoutManager(show.this);
         ll.setReverseLayout(true);
         recyclerView.setLayoutManager(ll);
@@ -101,13 +104,11 @@ public class show extends AppCompatActivity {
 
     //View Holder For Recycler View
     public static class ShowDataViewHolder extends RecyclerView.ViewHolder {
-       private TextView names;
-       private TextView highs;
-       private TextView lows;
-       private TextView prices;
-       private TextView times ,dates;
-       private ImageView btn_delete;
-
+        private final TextView image_title  ;
+        private final ImageView image_url;
+        private TextView imge_des;
+        private ImageView btn_delete;
+        private TextView time;
 
 
 
@@ -115,37 +116,35 @@ public class show extends AppCompatActivity {
         public ShowDataViewHolder(final View itemView)
         {
             super(itemView);
-            names = itemView.findViewById(R.id.namess);
-            times = itemView.findViewById(R.id.timess);
-            highs =  itemView.findViewById(R.id.highss);
-            lows =  itemView.findViewById(R.id.lowss);
-            prices = itemView.findViewById(R.id.pricess);
-            btn_delete = itemView.findViewById(R.id.delete);
-            dates = itemView.findViewById(R.id.datess);
+            image_url = (ImageView) itemView.findViewById(R.id.fetch_image);
+            image_title = (TextView) itemView.findViewById(R.id.fetch_image_title);
+            imge_des = (TextView) itemView.findViewById(R.id.fetch_description);
+            btn_delete = (ImageView) itemView.findViewById(R.id.btn_delete);
 
 
         }
 
-
-        private void Name(String name) {
-            names.setText(name);
-        }
-        public void Price(String price) {
-            prices.setText(price);
-        }
-        public void High(String high) {
-            highs.setText(high);
-        }
-        public void Time(String time) {
-            times.setText(time);
-        }
-        public void Low(String low) {
-            lows.setText(low);
+        private void Image_Title(String title)
+        {
+            image_title.setText(title);
         }
 
 
-        public void Date(String date) {
-        dates.setText(date);
+
+        private void Image_URL(String title)
+        {
+            Glide.with(itemView.getContext())
+                    .load(title)
+                    .crossFade()
+                    .thumbnail(Glide.with(itemView.getContext()).load(R.drawable.loading_circle))
+                    .into(image_url);
+
+        }
+
+
+        public void Image_Des(String title) {
+            imge_des.setText(title);
+
         }
     }
 
@@ -153,22 +152,17 @@ public class show extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-
         setmFirebaseAdapter(new FirebaseRecyclerAdapter<show_items, ShowDataViewHolder>(
-                show_items.class, R.layout.saved_data, ShowDataViewHolder.class, myRef.orderByChild(a+b+ca+d)) {
+                show_items.class, R.layout.showbookamrks, ShowDataViewHolder.class, myRef.orderByValue()) {
             public void populateViewHolder(final ShowDataViewHolder viewHolder, show_items model, final int position) {
 
 
                 bookmark_id = getRef(position).getKey();
                 send(bookmark_id);
                 Log.e("BookMark",bookmark_id);
-                viewHolder.Name(model.getNAME());
-                viewHolder.Price(model.getPRICE());
-                viewHolder.High(model.getHIGHDAY());
-                viewHolder.Low(model.getLOWDAY());
-                viewHolder.Time(model.getTIME());
-                viewHolder.Date(model.getDATE());
-
+                viewHolder.Image_URL(model.getImage_URL());
+                viewHolder.Image_Title(model.getImage_Title());
+                viewHolder.Image_Des(model.getImage_des());
 
 
 
@@ -205,7 +199,7 @@ public class show extends AppCompatActivity {
                             public void onClick(View v) {
                                 int selectedItems = position;
 
-                                if(getmFirebaseAdapter().getItemCount() >0) {
+                                if(getmFirebaseAdapter().getItemCount() >2) {
                                     getmFirebaseAdapter().getRef(selectedItems).removeValue();
                                     getmFirebaseAdapter().notifyItemRemoved(selectedItems);
                                     recyclerView.invalidate();
@@ -216,7 +210,6 @@ public class show extends AppCompatActivity {
                                     getmFirebaseAdapter().notifyItemRemoved(selectedItems);
                                     recyclerView.invalidate();
                                     onStart();
-
                                 }
                                 dialog.dismiss();
 
@@ -231,8 +224,8 @@ public class show extends AppCompatActivity {
                 });
 
 
-               progressBar.setVisibility(View.GONE);
-               nobookmarks.setVisibility(View.GONE);
+
+                progressBar.setVisibility(View.GONE);
             }
 
         });
@@ -248,6 +241,7 @@ public class show extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.getValue() == null){
+                    // Toast.makeText(show.this,"No Bookmarks added yet!",Toast.LENGTH_SHORT).show();
                     nobookmarks.setVisibility(View.VISIBLE);
                     progressBar.setVisibility(View.GONE);
                 }

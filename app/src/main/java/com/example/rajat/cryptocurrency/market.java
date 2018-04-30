@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.firebase.client.Firebase;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -66,14 +67,6 @@ public class market extends Fragment implements MyListener , SwipeRefreshLayout.
         RecyclerView.LayoutManager recyclerViewLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerViewLayoutManager);
 
-/*
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Timerm();
-            }
-        },0,period);
-*/
 
 
         progressBar = rootview.findViewById(R.id.progress);
@@ -120,45 +113,37 @@ public class market extends Fragment implements MyListener , SwipeRefreshLayout.
 
 
                 progressBar.setVisibility(View.GONE);
-                ArrayList<HashMap<String, Object>> dataList = new ArrayList<>();
+                ArrayList<HashMap<String, String>> dataList = new ArrayList<>();
 
 
 
                 if(response.isSuccessful()) {
                     recyclerView.setVisibility(View.VISIBLE);
                     try {
-                        HashMap<String, Object> dataMap;
-                        String arr[]={"BTC","ETH","XRP","BCH","LTC","ADA","NEO","XLM","EOS","XMR","DASH","ETC","XRB"};
-
+                        HashMap<String, Object> dataMap = null;
                         String str_testing = response.body().string();
                         dataMap = new HashMap<String, Object>();
                         JSONObject jsonObject = new JSONObject(str_testing);
+                        JSONArray data= jsonObject.getJSONArray("articles");
+                        for(int i=0;i<data.length();i++){
+                            JSONObject d = data.getJSONObject(i);
+                            //  String description = d.getString("description");
+                            String title = d.getString("title");
+                            String Image = d.getString("urlToImage");
+                            String url = d.getString("url");
+                            String des = d.getString("description");
+                            String time = d.getString("publishedAt");
+                            //tmp hashmap for single contact
+                            HashMap<String,String> samachar = new HashMap<>();
 
 
-                        JSONObject data = jsonObject.getJSONObject("RAW");
-                        for(i=0;i<arr.length;i++) {
+                            samachar.put("title",title);
+                            samachar.put("urlToImage",Image);
+                            samachar.put("url",url);
+                            samachar.put("description",des);
+                            samachar.put("publishedAt",time);
 
-                            JSONObject d = data.getJSONObject(arr[i]);
-
-                            JSONObject usd = d.getJSONObject("USD");
-                            price = usd.getString("PRICE");
-                            high = usd.getString("HIGHDAY");
-                            low = usd.getString("LOWDAY");
-                            name = usd.getString("FROMSYMBOL");
-
-                            HashMap<String, Object> samachar = new HashMap<>();
-
-                            samachar.put("FROMSYMBOL", arr[i]);
-                            String finalprice = String.format("%.02f",Float.parseFloat( price));
-                            samachar.put("PRICE", '$'+ finalprice);
-                            String finalhigh = String.format("%.02f",Float.parseFloat(high));
-                            samachar.put("HIGH",'$'+finalhigh);
-                            String finallow = String.format("%.02f",Float.parseFloat(low));
-                            samachar.put("LOW",'$'+finallow);
-                            samachar.put("NAME",name);
                             dataList.add(samachar);
-
-
 
                         }
 
@@ -198,19 +183,7 @@ public class market extends Fragment implements MyListener , SwipeRefreshLayout.
 
     }
 
-    //Timer Method
-/*    private void Timerm(){
-        getActivity().runOnUiThread(click);
-    }
 
-    private Runnable click = new Runnable() {
-        @Override
-        public void run() {
-
-      loadJSON(0);
-
-        }
-    };*/
 
     @Override
     public void callback(HashMap<String, Object> tmpMap, String dataType, int mode) {
